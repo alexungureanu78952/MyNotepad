@@ -9,11 +9,230 @@
         mc:Ignorable="d"
         Title="Notepad Clone"
         Height="600"
-        Width="1000">
-    <Grid>
-        <TextBlock Text="MainWindow Ready - Milestone 0 Complete!"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   FontSize="18"/>
-    </Grid>
+        Width="1000"
+        WindowStartupLocation="CenterScreen">
+
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New File"
+                        Command="{Binding CreateNewDocumentCommand}"/>
+                <MenuItem Header="_Open File..."
+                        Command="{Binding OpenFileCommand}"/>
+                <Separator/>
+                <MenuItem Header="_Save File"
+                        Command="{Binding SaveFileCommand}"/>
+                <MenuItem Header="Save File _As..."
+                        Command="{Binding SaveFileAsCommand}"/>
+                <Separator/>
+                <MenuItem Header="_Close All Files"
+                        Command="{Binding CloseAllFilesCommand}"/>
+                <Separator/>
+                <MenuItem Header="E_xit"
+                        Command="{Binding ExitCommand}"/>
+            </MenuItem>
+
+            <MenuItem Header="_Search">
+                <MenuItem Header="_Find..."
+                        Command="{Binding FindCommand}"/>
+                <MenuItem Header="_Replace..."
+                        Command="{Binding ReplaceCommand}"/>
+                <MenuItem Header="Replace _All..."
+                        Command="{Binding ReplaceAllCommand}"/>
+                <Separator/>
+                <MenuItem Header="Search Scope">
+                    <MenuItem Header="Selected _Tab"
+                            IsCheckable="True"
+                            IsChecked="{Binding IsSearchScopeSelectedTab}"/>
+                    <MenuItem Header="_All Tabs"
+                            IsCheckable="True"
+                            IsChecked="{Binding IsSearchScopeAllTabs}"/>
+                </MenuItem>
+            </MenuItem>
+
+            <MenuItem Header="_View">
+                <MenuItem Header="_Standard"
+                        Command="{Binding ShowStandardViewCommand}"
+                        IsCheckable="True"
+                        IsChecked="{Binding IsStandardView}"/>
+                <MenuItem Header="_Folder Explorer"
+                        Command="{Binding ToggleFolderExplorerCommand}"
+                        IsCheckable="True"
+                        IsChecked="{Binding IsFolderExplorerVisible}"/>
+            </MenuItem>
+
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About"
+                        Command="{Binding ShowAboutCommand}"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Toolbar -->
+        <ToolBarTray DockPanel.Dock="Top">
+            <ToolBar>
+                <Button Command="{Binding CreateNewDocumentCommand}"
+                        ToolTip="New File (Ctrl+N)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📄"
+                                FontSize="16"
+                                Margin="0,0,5,0"/>
+                        <TextBlock Text="New"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding OpenFileCommand}"
+                        ToolTip="Open File (Ctrl+O)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📂"
+                                FontSize="16"
+                                Margin="0,0,5,0"/>
+                        <TextBlock Text="Open"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding SaveFileCommand}"
+                        ToolTip="Save File (Ctrl+S)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="💾"
+                                FontSize="16"
+                                Margin="0,0,5,0"/>
+                        <TextBlock Text="Save"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding SaveFileAsCommand}"
+                        ToolTip="Save As...">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="💾"
+                                FontSize="16"
+                                Margin="0,0,5,0"/>
+                        <TextBlock Text="Save As"/>
+                    </StackPanel>
+                </Button>
+
+                <Separator/>
+
+                <Button Command="{Binding FindCommand}"
+                        ToolTip="Find (Ctrl+F)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔍"
+                                FontSize="16"
+                                Margin="0,0,5,0"/>
+                        <TextBlock Text="Find"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding ReplaceCommand}"
+                        ToolTip="Replace (Ctrl+H)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔄"
+                                FontSize="16"
+                                Margin="0,0,5,0"/>
+                        <TextBlock Text="Replace"/>
+                    </StackPanel>
+                </Button>
+            </ToolBar>
+        </ToolBarTray>
+
+        <!-- Main Content Area -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"
+                        MinWidth="150"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Folder Explorer Panel -->
+            <Border Grid.Column="0"
+                    BorderBrush="LightGray"
+                    BorderThickness="0,0,1,0"
+                    Visibility="{Binding IsFolderExplorerVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                            Text="Folder Explorer"
+                               FontWeight="Bold"
+                            Padding="5"
+                            Background="LightGray"/>
+                    <TreeView x:Name="FolderTreeView"
+                              ItemsSource="{Binding FolderTreeRoots}"
+                              MouseDoubleClick="FolderTreeView_MouseDoubleClick">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}"
+                                               Margin="0,0,5,0"
+                                            FontSize="14"/>
+                                    <TextBlock Text="{Binding Name}"/>
+                                </StackPanel>
+                                <HierarchicalDataTemplate.ItemContainerStyle>
+                                    <Style TargetType="TreeViewItem">
+                                        <Setter Property="IsExpanded"
+                                                Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                                        <Setter Property="IsSelected"
+                                                Value="{Binding IsSelected, Mode=TwoWay}"/>
+                                    </Style>
+                                </HierarchicalDataTemplate.ItemContainerStyle>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="TreeViewItem">
+                                <Setter Property="IsExpanded"
+                                        Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                                <Setter Property="IsSelected"
+                                        Value="{Binding IsSelected, Mode=TwoWay}"/>
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+                    </TreeView>
+                </DockPanel>
+            </Border>
+
+            <!-- Grid Splitter -->
+            <GridSplitter Grid.Column="1"
+                    Width="3"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Stretch"
+                          Visibility="{Binding IsFolderExplorerVisible, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+            <!-- Tab Control for Documents -->
+            <TabControl Grid.Column="2"
+                        ItemsSource="{Binding Documents}"
+                        SelectedItem="{Binding SelectedDocument}"
+                        Padding="0">
+                <TabControl.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right"
+                                    Content="✕"
+                                    Margin="5,0,0,0"
+                                    Padding="3,0"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    FontSize="14"
+                                    FontWeight="Bold"
+                                    Cursor="Hand"
+                                    ToolTip="Close"
+                                    Command="{Binding DataContext.CloseDocumentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"/>
+                            <TextBlock Text="{Binding DisplayTitle}"
+                                    VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+                <TabControl.ContentTemplate>
+                    <DataTemplate>
+                        <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 AcceptsTab="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 FontFamily="Consolas"
+                                 FontSize="12"
+                                 Padding="5"/>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
+        </Grid>
+    </DockPanel>
 </Window>

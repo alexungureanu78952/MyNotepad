@@ -10,10 +10,10 @@ Regula de bază: fiecare milestone trebuie să compileze și să poată fi demon
 | Milestone | Status | Data Finalizare |
 |-----------|--------|-----------------|
 | Milestone 0 — Setup proiect | ✅ Completat | 2026-03-07 |
-| Milestone 1 — Shell UI + tab nou implicit | 🔄 În lucru | — |
-| Milestone 2 — Document lifecycle | ⏳ Planificat | — |
-| Milestone 3 — Close flows | ⏳ Planificat | — |
-| Milestone 4 — Folder Explorer | ⏳ Planificat | — |
+| Milestone 1 — Shell UI + tab nou implicit | ✅ Completat | 2026-03-07 |
+| Milestone 2 — Document lifecycle | ✅ Completat | 2026-03-07 |
+| Milestone 3 — Close flows | ✅ Completat | 2026-03-07 |
+| Milestone 4 — Folder Explorer | 🔄 În lucru | — |
 | Milestone 5 — Context menu pe folder | ⏳ Planificat | — |
 | Milestone 6 — Search & Replace | ⏳ Planificat | — |
 | Milestone 7 — View & Help | ⏳ Planificat | — |
@@ -49,27 +49,46 @@ Inițializezi aplicația WPF și structura care evită logica în code-behind.
 
 ---
 
-## Milestone 1 — Shell UI + tab nou implicit
+## Milestone 1 — Shell UI + tab nou implicit ✅
 ### Scop
 Interfața principală și comportamentul inițial al aplicației.
 
 ### Task-uri
-1. Creează layout principal:
+1. ✅ Creează layout principal:
    - meniu sus
    - toolbar
    - panou stânga pentru Folder Explorer
    - zonă taburi editor
-2. Adaugă meniurile cerute:
+2. ✅ Adaugă meniurile cerute:
    - File
    - Search
    - View
    - Help
-3. La pornirea aplicației, creează automat un tab nou gol.
-4. Denumește documentele noi `File 1`, `File 2`, etc.
+3. ✅ La pornirea aplicației, creează automat un tab nou gol.
+4. ✅ Denumește documentele noi `File 1`, `File 2`, etc.
 
 ### Done când
-- La start există un tab gol nou.
-- UI-ul de bază este complet și stabil.
+- ✅ La start există un tab gol nou.
+- ✅ UI-ul de bază este complet și stabil.
+
+### Ce s-a implementat
+- Layout complet în [MainWindow.xaml](NotepadClone/Presentation/Views/MainWindow.xaml):
+  - **Menu Bar** cu File/Search/View/Help și toate submeniurile
+  - **Toolbar** cu butoane pentru comenzi frecvente (New, Open, Save, Save As, Find, Replace)
+  - **Folder Explorer** panel (vizibil/ascuns prin View menu)
+  - **TabControl** pentru documente cu binding la colecția Documents
+  - **GridSplitter** pentru redimensionare panou explorer
+- [BoolToVisibilityConverter](NotepadClone/Presentation/Converters/BoolToVisibilityConverter.cs) pentru toggle vizibilitate
+- [MainViewModel](NotepadClone/Presentation/ViewModels/MainViewModel.cs) extins cu:
+  - Comenzi: `CreateNewDocument`, `OpenFile`, `SaveFile`, `SaveFileAs`, `CloseAllFiles`
+  - Comenzi Search: `Find`, `Replace`, `ReplaceAll` (placeholder pentru M6)
+  - Comenzi View: `ShowStandardView`, `ToggleFolderExplorer`
+  - Comandă Help: `ShowAbout`
+  - Proprietăți UI: `IsFolderExplorerVisible`, `IsStandardView`, `IsSearchScopeSelectedTab/AllTabs`
+  - Logic pentru tracking `IsDirty` pe documente
+- Tab inițial creat automat cu nume `File 1`
+- TextBox în fiecare tab pentru editare text (Consolas, scroll bars, AcceptsReturn/Tab)
+- Toate comenzile implementate funcțional (File operations: New, Open, Save, Save As)
 
 ---
 
@@ -94,18 +113,43 @@ Flux complet de lucru pe documentul curent.
 
 ---
 
-## Milestone 3 — Închidere tab curent și close all
+## Milestone 3 — Închidere tab curent și close all ✅
 ### Scop
 Protecția datelor nesalvate.
 
 ### Task-uri
-1. `Close current file` (din tab activ).
-2. Dacă tabul are modificări nesalvate, cere confirmare pentru salvare.
-3. `Close all files` cu același comportament de confirmare pentru fiecare document modificat.
-4. `Exit` trece prin aceeași verificare de documente nesalvate.
+1. ✅ `Close current file` (din tab activ).
+2. ✅ Dacă tabul are modificări nesalvate, cere confirmare pentru salvare.
+3. ✅ `Close all files` cu același comportament de confirmare pentru fiecare document modificat.
+4. ✅ `Exit` trece prin aceeași verificare de documente nesalvate.
 
 ### Done când
-- Nu se pierd modificări fără confirmare explicită.
+- ✅ Nu se pierd modificări fără confirmare explicită.
+
+### Ce s-a implementat
+- **Buton de închidere (✕)** pe fiecare tab în [MainWindow.xaml](NotepadClone/Presentation/Views/MainWindow.xaml)
+  - Poziționat DockPanel.Right în ItemTemplate
+  - Stil minimalist (transparent background, bold font)
+  - Command binding la CloseDocumentCommand cu document ca parametru
+- **CloseDocument command** în [MainViewModel](NotepadClone/Presentation/ViewModels/MainViewModel.cs):
+  - Verifică dacă documentul are modificări nesalvate
+  - Apelează `PromptSaveIfNeeded` pentru protecție date
+  - Șterge documentul din colecție dacă user confirmă
+  - Creează tab nou automat dacă nu mai există documente
+- **CloseAllFiles command actualizat**:
+  - Iterează prin toți documentele și verifică fiecare pentru salvare
+  - Dacă user anulează la orice document, procesul se oprește
+  - După închidere completă, creează tab nou
+- **Exit command actualizat**:
+  - Verifică toate documentele pentru modificări nesalvate
+  - User poate anula exit-ul din orice prompt
+  - Shutdown doar după confirmarea tuturor documentelor
+- **Metodă helper `PromptSaveIfNeeded`**:
+  - Dialog Yes/No/Cancel pentru documente modificate
+  - Yes → Save (cu dialog Save As dacă nu are cale)
+  - No → Discard changes
+  - Cancel → Anulează operația
+  - Gestionare erori pentru operații de salvare
 
 ---
 

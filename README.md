@@ -58,21 +58,26 @@ NotepadClone/
 - [x] Toate serviciile cu interfețe implementate
 - [x] Build success + aplicația pornește fără erori
 
-### Milestone 1 — Shell UI + tab nou implicit (urmează)
-- [ ] Layout principal (meniu, toolbar, Folder Explorer, TabControl)
-- [ ] Meniuri: File, Search, View, Help
-- [ ] Tab gol creat automat la pornire (nume: `File 1`)
+### Milestone 1 — Shell UI + tab nou implicit ✔️
+- [x] Layout principal (meniu, toolbar, Folder Explorer, TabControl)
+- [x] Meniuri: File, Search, View, Help cu toate submeniurile
+- [x] Toolbar cu butoane pentru comenzi frecvente
+- [x] Tab gol creat automat la pornire (nume: `File 1`)
+- [x] Toate comenzile File funcționale (New, Open, Save, Save As)
+- [x] Toggle pentru Folder Explorer (View menu)
+- [x] Tracking IsDirty pentru documente modificate
 
-### Milestone 2 — Document lifecycle (New/Open/Save/Save As)
-- [ ] `New file` → tab nou
-- [ ] `Open file...` → dialog + încărcare în tab
-- [ ] `Save` / `Save As` → persistență pe disc
-- [ ] Titluri tab corecte + marker pentru unsaved (`*`)
+### Milestone 2 — Document lifecycle ✔️
+- [x] `New file` → tab nou
+- [x] `Open file...` → dialog + încărcare în tab
+- [x] `Save` / `Save As` → persistență pe disc
+- [x] Titluri tab corecte + marker pentru unsaved (`*`)
 
-### Milestone 3 — Close flows
-- [ ] `Close current file` cu prompt salvare
-- [ ] `Close all files` cu protecție date
-- [ ] `Exit` cu verificare documente modificate
+### Milestone 3 — Close flows ✔️
+- [x] `Close current file` cu buton X pe fiecare tab
+- [x] Prompt salvare pentru documente modificate
+- [x] `Close all files` cu protecție date per document
+- [x] `Exit` cu verificare completă documente nesalvate
 
 ### Milestone 4 — Folder Explorer
 - [ ] Tree view cu directoare/fișiere
@@ -119,4 +124,4 @@ dotnet run
 - +1p funcționalități opționale (find next/previous, copy/cut/paste, uppercase/lowercase, go to line, remove empty lines, set/unset readonly)
 
 ---
-**Status curent:** Milestone 0 completat ✅ — Ready for Milestone 1
+**Status curent:** Milestones 0-3 completate ✅ — File operations + Close flows funcționale! Ready for Milestone 4 (Folder Explorer)
