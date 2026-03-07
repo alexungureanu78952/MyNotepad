@@ -24,4 +24,14 @@ public interface IDialogService
     /// Shows an information message box.
     /// </summary>
     void ShowMessage(string message, string title);
+
+    /// <summary>
+    /// Shows a simple input dialog and returns entered text, or null if empty.
+    /// </summary>
+    string? ShowInputDialog(string prompt, string title, string defaultValue = "");
+
+    /// <summary>
+    /// Shows About dialog with student details and institutional email link.
+    /// </summary>
+    void ShowAboutDialog(string studentName, string groupName, string institutionalEmail);
 }

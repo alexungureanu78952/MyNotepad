@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using NotepadClone.Application.Interfaces;
 using System.Collections.ObjectModel;
 using System.IO;
 
@@ -9,6 +10,7 @@ namespace NotepadClone.Presentation.ViewModels;
 /// </summary>
 public partial class TreeNodeViewModel : ObservableObject
 {
+    private readonly IFolderService _folderService;
     private readonly string _fullPath;
     private readonly bool _isDirectory;
     private bool _isExpanded;
@@ -38,16 +40,22 @@ public partial class TreeNodeViewModel : ObservableObject
         }
     }
 
-    public TreeNodeViewModel(string path, bool isDirectory)
+    public TreeNodeViewModel(string path, bool isDirectory, IFolderService folderService, bool addPlaceholder = true)
     {
+        _folderService = folderService;
         _fullPath = path;
         _isDirectory = isDirectory;
-        _name = isDirectory ? new DirectoryInfo(path).Name : Path.GetFileName(path);
+        var directoryName = isDirectory && !string.IsNullOrWhiteSpace(path)
+            ? new DirectoryInfo(path).Name
+            : string.Empty;
+        _name = isDirectory
+            ? (string.IsNullOrWhiteSpace(directoryName) ? path : directoryName)
+            : Path.GetFileName(path);
 
         // Add dummy child for directories to show expand arrow
-        if (_isDirectory)
+        if (_isDirectory && addPlaceholder)
         {
-            Children.Add(new TreeNodeViewModel("", false) { Name = "Loading..." });
+            Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, false) { Name = "Loading..." });
         }
     }
 
@@ -61,12 +69,12 @@ public partial class TreeNodeViewModel : ObservableObject
         try
         {
             // Load subdirectories
-            var directories = Directory.GetDirectories(_fullPath);
+            var directories = _folderService.GetDirectories(_fullPath);
             foreach (var dir in directories.OrderBy(d => d))
             {
                 try
                 {
-                    Children.Add(new TreeNodeViewModel(dir, true));
+                    Children.Add(new TreeNodeViewModel(dir, true, _folderService));
                 }
                 catch
                 {
@@ -75,12 +83,12 @@ public partial class TreeNodeViewModel : ObservableObject
             }
 
             // Load files
-            var files = Directory.GetFiles(_fullPath);
+            var files = _folderService.GetFiles(_fullPath);
             foreach (var file in files.OrderBy(f => f))
             {
                 try
                 {
-                    Children.Add(new TreeNodeViewModel(file, false));
+                    Children.Add(new TreeNodeViewModel(file, false, _folderService, false));
                 }
                 catch
                 {
@@ -91,16 +99,16 @@ public partial class TreeNodeViewModel : ObservableObject
             // If no children, indicate empty folder
             if (Children.Count == 0)
             {
-                Children.Add(new TreeNodeViewModel("", false) { Name = "(Empty)" });
+                Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, false) { Name = "(Empty)" });
             }
         }
         catch (UnauthorizedAccessException)
         {
-            Children.Add(new TreeNodeViewModel("", false) { Name = "(Access Denied)" });
+            Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, false) { Name = "(Access Denied)" });
         }
         catch (Exception ex)
         {
-            Children.Add(new TreeNodeViewModel("", false) { Name = $"(Error: {ex.Message})" });
+            Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, false) { Name = $"(Error: {ex.Message})" });
         }
     }
 
@@ -116,7 +124,7 @@ public partial class TreeNodeViewModel : ObservableObject
             else
             {
                 Children.Clear();
-                Children.Add(new TreeNodeViewModel("", false) { Name = "Loading..." });
+                Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, false) { Name = "Loading..." });
             }
         }
     }

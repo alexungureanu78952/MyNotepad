@@ -9,10 +9,16 @@ namespace NotepadClone.Presentation.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
+    private const string AboutStudentName = "Ungureanu Alexandru-Florin";
+    private const string AboutGroupName = "10LF244";
+    private const string AboutInstitutionalEmail = "florin.ungureanu@student.unitbv.ro";
+
     private readonly IFileService _fileService;
+    private readonly ITextSearchService _textSearchService;
     private readonly IDialogService _dialogService;
     private readonly IFolderService _folderService;
     private readonly IClipboardService _clipboardService;
+    private string? _copiedFolderPath;
 
     private int _fileCounter = 1;
 
@@ -26,7 +32,7 @@ public partial class MainViewModel : ObservableObject
     private bool _isFolderExplorerVisible = true;
 
     [ObservableProperty]
-    private bool _isStandardView = true;
+    private bool _isStandardView;
 
     [ObservableProperty]
     private bool _isSearchScopeSelectedTab = true;
@@ -54,13 +60,23 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsSearchScopeAllTabs));
     }
 
+    partial void OnSelectedTreeNodeChanged(TreeNodeViewModel? value)
+    {
+        NewFileInFolderCommand.NotifyCanExecuteChanged();
+        CopyPathCommand.NotifyCanExecuteChanged();
+        CopyFolderCommand.NotifyCanExecuteChanged();
+        PasteFolderCommand.NotifyCanExecuteChanged();
+    }
+
     public MainViewModel(
         IFileService fileService,
+        ITextSearchService textSearchService,
         IDialogService dialogService,
         IFolderService folderService,
         IClipboardService clipboardService)
     {
         _fileService = fileService;
+        _textSearchService = textSearchService;
         _dialogService = dialogService;
         _folderService = folderService;
         _clipboardService = clipboardService;
@@ -81,7 +97,7 @@ public partial class MainViewModel : ObservableObject
             {
                 try
                 {
-                    FolderTreeRoots.Add(new TreeNodeViewModel(drive, true));
+                    FolderTreeRoots.Add(new TreeNodeViewModel(drive, true, _folderService));
                 }
                 catch
                 {
@@ -233,22 +249,125 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanExecuteFileCommand))]
     private void Find()
     {
-        // TODO: Implement in Milestone 6
-        _dialogService.ShowMessage("Find functionality will be implemented in Milestone 6", "Coming Soon");
+        var searchText = _dialogService.ShowInputDialog("Find what:", "Find");
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            return;
+        }
+
+        var targets = GetSearchTargets().ToList();
+        if (targets.Count == 0)
+        {
+            return;
+        }
+
+        var totalOccurrences = 0;
+        var matchedDocs = new List<string>();
+
+        foreach (var document in targets)
+        {
+            var occurrences = _textSearchService.CountOccurrences(document.Text, searchText);
+            if (occurrences > 0)
+            {
+                totalOccurrences += occurrences;
+                matchedDocs.Add($"{document.Title}: {occurrences}");
+            }
+        }
+
+        if (IsSearchScopeSelectedTab)
+        {
+            var message = totalOccurrences > 0
+                ? $"Found {totalOccurrences} occurrence(s) in '{targets[0].Title}'."
+                : $"No matches found in '{targets[0].Title}'.";
+            _dialogService.ShowMessage(message, "Find Result");
+            return;
+        }
+
+        var allTabsMessage = totalOccurrences > 0
+            ? $"Found {totalOccurrences} occurrence(s) in {matchedDocs.Count} tab(s).\n\n{string.Join("\n", matchedDocs)}"
+            : "No matches found in open tabs.";
+        _dialogService.ShowMessage(allTabsMessage, "Find Result");
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteFileCommand))]
     private void Replace()
     {
-        // TODO: Implement in Milestone 6
-        _dialogService.ShowMessage("Replace functionality will be implemented in Milestone 6", "Coming Soon");
+        var searchText = _dialogService.ShowInputDialog("Find what:", "Replace");
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            return;
+        }
+
+        var replacementText = _dialogService.ShowInputDialog("Replace with:", "Replace", string.Empty) ?? string.Empty;
+
+        var targets = GetSearchTargets().ToList();
+        if (targets.Count == 0)
+        {
+            return;
+        }
+
+        var replacedInTabs = 0;
+        foreach (var document in targets)
+        {
+            if (_textSearchService.ReplaceFirst(document.Text, searchText, replacementText, out var updatedText))
+            {
+                document.Text = updatedText;
+                document.IsDirty = true;
+                replacedInTabs++;
+
+                if (IsSearchScopeSelectedTab)
+                {
+                    break;
+                }
+            }
+        }
+
+        var message = replacedInTabs > 0
+            ? IsSearchScopeSelectedTab
+                ? "One occurrence replaced in selected tab."
+                : $"One occurrence replaced in {replacedInTabs} tab(s)."
+            : "No match found to replace.";
+        _dialogService.ShowMessage(message, "Replace Result");
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteFileCommand))]
     private void ReplaceAll()
     {
-        // TODO: Implement in Milestone 6
-        _dialogService.ShowMessage("Replace All functionality will be implemented in Milestone 6", "Coming Soon");
+        var searchText = _dialogService.ShowInputDialog("Find what:", "Replace All");
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            return;
+        }
+
+        var replacementText = _dialogService.ShowInputDialog("Replace with:", "Replace All", string.Empty) ?? string.Empty;
+
+        var targets = GetSearchTargets().ToList();
+        if (targets.Count == 0)
+        {
+            return;
+        }
+
+        var replacedTabs = 0;
+        var totalReplacements = 0;
+
+        foreach (var document in targets)
+        {
+            var replacedCount = _textSearchService.ReplaceAll(document.Text, searchText, replacementText, out var updatedText);
+            if (replacedCount > 0)
+            {
+                document.Text = updatedText;
+                document.IsDirty = true;
+                replacedTabs++;
+                totalReplacements += replacedCount;
+            }
+        }
+
+        var message = totalReplacements > 0
+            ? IsSearchScopeSelectedTab
+                ? $"Replaced {totalReplacements} occurrence(s) in selected tab."
+                : $"Replaced {totalReplacements} occurrence(s) in {replacedTabs} tab(s)."
+            : "No matches found for Replace All.";
+        _dialogService.ShowMessage(message, "Replace All Result");
     }
 
     [RelayCommand]
@@ -259,10 +378,10 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void ToggleFolderExplorer()
+    private void ShowFolderExplorerView()
     {
-        IsFolderExplorerVisible = !IsFolderExplorerVisible;
-        IsStandardView = !IsFolderExplorerVisible;
+        IsFolderExplorerVisible = true;
+        IsStandardView = false;
     }
 
     [RelayCommand]
@@ -303,16 +422,99 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    [RelayCommand(CanExecute = nameof(CanRunDirectoryCommand))]
+    private void NewFileInFolder(TreeNodeViewModel? node)
+    {
+        if (node == null)
+        {
+            return;
+        }
+
+        var newFilePath = BuildNextNewFilePath(node.FullPath);
+
+        try
+        {
+            _folderService.CreateFile(newFilePath);
+            node.Refresh();
+            node.IsExpanded = true;
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowMessage($"Error creating file: {ex.Message}", "Error");
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRunDirectoryCommand))]
+    private void CopyPath(TreeNodeViewModel? node)
+    {
+        if (node == null)
+        {
+            return;
+        }
+
+        _clipboardService.SetText(node.FullPath);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRunDirectoryCommand))]
+    private void CopyFolder(TreeNodeViewModel? node)
+    {
+        if (node == null)
+        {
+            return;
+        }
+
+        _copiedFolderPath = node.FullPath;
+        PasteFolderCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanPasteFolder))]
+    private void PasteFolder(TreeNodeViewModel? targetNode)
+    {
+        if (targetNode == null || string.IsNullOrWhiteSpace(_copiedFolderPath))
+        {
+            return;
+        }
+
+        var sourcePath = _copiedFolderPath;
+        var targetPath = targetNode.FullPath;
+
+        if (string.Equals(sourcePath, targetPath, StringComparison.OrdinalIgnoreCase))
+        {
+            _dialogService.ShowMessage("Cannot paste a folder into itself.", "Invalid Operation");
+            return;
+        }
+
+        if (targetPath.StartsWith(sourcePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        {
+            _dialogService.ShowMessage("Cannot paste a folder into one of its subfolders.", "Invalid Operation");
+            return;
+        }
+
+        var sourceName = Path.GetFileName(sourcePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        if (string.IsNullOrWhiteSpace(sourceName))
+        {
+            _dialogService.ShowMessage("This folder cannot be copied.", "Invalid Operation");
+            return;
+        }
+
+        var destinationPath = BuildUniqueFolderPath(targetPath, sourceName);
+
+        try
+        {
+            _folderService.CopyFolder(sourcePath, destinationPath);
+            targetNode.Refresh();
+            targetNode.IsExpanded = true;
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowMessage($"Error pasting folder: {ex.Message}", "Error");
+        }
+    }
+
     [RelayCommand]
     private void ShowAbout()
     {
-        _dialogService.ShowMessage(
-            "Notepad Clone - WPF Homework Project\n\n" +
-            "Student: [Your Name]\n" +
-            "Grupa: [Your Group]\n" +
-            "Email: [your.email@student.pub.ro]\n\n" +
-            "Developed with .NET 8 + WPF + MVVM",
-            "About Notepad Clone");
+        _dialogService.ShowAboutDialog(AboutStudentName, AboutGroupName, AboutInstitutionalEmail);
     }
 
     [RelayCommand]
@@ -399,5 +601,71 @@ public partial class MainViewModel : ObservableObject
     private bool CanExecuteFileCommand()
     {
         return SelectedDocument != null;
+    }
+
+    private IEnumerable<EditorDocument> GetSearchTargets()
+    {
+        if (IsSearchScopeSelectedTab)
+        {
+            if (SelectedDocument != null)
+            {
+                yield return SelectedDocument;
+            }
+
+            yield break;
+        }
+
+        foreach (var document in Documents)
+        {
+            yield return document;
+        }
+    }
+
+    private bool CanRunDirectoryCommand(TreeNodeViewModel? node)
+    {
+        return node is { IsDirectory: true } && !string.IsNullOrWhiteSpace(node.FullPath);
+    }
+
+    private bool CanPasteFolder(TreeNodeViewModel? node)
+    {
+        return CanRunDirectoryCommand(node)
+            && !string.IsNullOrWhiteSpace(_copiedFolderPath)
+            && _folderService.DirectoryExists(_copiedFolderPath);
+    }
+
+    private string BuildNextNewFilePath(string folderPath)
+    {
+        var counter = 1;
+        while (true)
+        {
+            var candidate = Path.Combine(folderPath, $"NewFile{counter}.txt");
+            if (!_fileService.FileExists(candidate))
+            {
+                return candidate;
+            }
+
+            counter++;
+        }
+    }
+
+    private string BuildUniqueFolderPath(string targetPath, string sourceName)
+    {
+        var candidate = Path.Combine(targetPath, sourceName);
+        if (!_folderService.DirectoryExists(candidate))
+        {
+            return candidate;
+        }
+
+        var index = 1;
+        while (true)
+        {
+            var suffixed = Path.Combine(targetPath, $"{sourceName} - Copy {index}");
+            if (!_folderService.DirectoryExists(suffixed))
+            {
+                return suffixed;
+            }
+
+            index++;
+        }
     }
 }

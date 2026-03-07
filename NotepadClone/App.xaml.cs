@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NotepadClone.Application.Interfaces;
+using NotepadClone.Application.Services;
 using NotepadClone.Infrastructure.Services;
 using NotepadClone.Presentation.ViewModels;
 using NotepadClone.Presentation.Views;
@@ -32,6 +33,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IFolderService, FolderService>();
         services.AddSingleton<IClipboardService, ClipboardService>();
+        services.AddSingleton<ITextSearchService, TextSearchService>();
 
         // Register ViewModels
         services.AddSingleton<MainViewModel>();

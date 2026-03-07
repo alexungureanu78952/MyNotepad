@@ -17,54 +17,57 @@
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_New File"
-                        Command="{Binding CreateNewDocumentCommand}"/>
+                          Command="{Binding CreateNewDocumentCommand}"/>
                 <MenuItem Header="_Open File..."
-                        Command="{Binding OpenFileCommand}"/>
+                          Command="{Binding OpenFileCommand}"/>
                 <Separator/>
                 <MenuItem Header="_Save File"
-                        Command="{Binding SaveFileCommand}"/>
+                          Command="{Binding SaveFileCommand}"/>
                 <MenuItem Header="Save File _As..."
-                        Command="{Binding SaveFileAsCommand}"/>
+                          Command="{Binding SaveFileAsCommand}"/>
                 <Separator/>
+                <MenuItem Header="_Close File"
+                          Command="{Binding CloseDocumentCommand}"
+                          CommandParameter="{Binding SelectedDocument}"/>
                 <MenuItem Header="_Close All Files"
-                        Command="{Binding CloseAllFilesCommand}"/>
+                          Command="{Binding CloseAllFilesCommand}"/>
                 <Separator/>
                 <MenuItem Header="E_xit"
-                        Command="{Binding ExitCommand}"/>
+                          Command="{Binding ExitCommand}"/>
             </MenuItem>
 
             <MenuItem Header="_Search">
                 <MenuItem Header="_Find..."
-                        Command="{Binding FindCommand}"/>
+                          Command="{Binding FindCommand}"/>
                 <MenuItem Header="_Replace..."
-                        Command="{Binding ReplaceCommand}"/>
+                          Command="{Binding ReplaceCommand}"/>
                 <MenuItem Header="Replace _All..."
-                        Command="{Binding ReplaceAllCommand}"/>
+                          Command="{Binding ReplaceAllCommand}"/>
                 <Separator/>
                 <MenuItem Header="Search Scope">
                     <MenuItem Header="Selected _Tab"
-                            IsCheckable="True"
-                            IsChecked="{Binding IsSearchScopeSelectedTab}"/>
+                              IsCheckable="True"
+                              IsChecked="{Binding IsSearchScopeSelectedTab}"/>
                     <MenuItem Header="_All Tabs"
-                            IsCheckable="True"
-                            IsChecked="{Binding IsSearchScopeAllTabs}"/>
+                              IsCheckable="True"
+                              IsChecked="{Binding IsSearchScopeAllTabs}"/>
                 </MenuItem>
             </MenuItem>
 
             <MenuItem Header="_View">
                 <MenuItem Header="_Standard"
-                        Command="{Binding ShowStandardViewCommand}"
-                        IsCheckable="True"
-                        IsChecked="{Binding IsStandardView}"/>
+                          Command="{Binding ShowStandardViewCommand}"
+                          IsCheckable="True"
+                          IsChecked="{Binding IsStandardView}"/>
                 <MenuItem Header="_Folder Explorer"
-                        Command="{Binding ToggleFolderExplorerCommand}"
-                        IsCheckable="True"
-                        IsChecked="{Binding IsFolderExplorerVisible}"/>
+                          Command="{Binding ShowFolderExplorerViewCommand}"
+                          IsCheckable="True"
+                          IsChecked="{Binding IsFolderExplorerVisible}"/>
             </MenuItem>
 
             <MenuItem Header="_Help">
                 <MenuItem Header="_About"
-                        Command="{Binding ShowAboutCommand}"/>
+                          Command="{Binding ShowAboutCommand}"/>
             </MenuItem>
         </Menu>
 
@@ -75,8 +78,8 @@
                         ToolTip="New File (Ctrl+N)">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="📄"
-                                FontSize="16"
-                                Margin="0,0,5,0"/>
+                                   FontSize="16"
+                                   Margin="0,0,5,0"/>
                         <TextBlock Text="New"/>
                     </StackPanel>
                 </Button>
@@ -85,8 +88,8 @@
                         ToolTip="Open File (Ctrl+O)">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="📂"
-                                FontSize="16"
-                                Margin="0,0,5,0"/>
+                                   FontSize="16"
+                                   Margin="0,0,5,0"/>
                         <TextBlock Text="Open"/>
                     </StackPanel>
                 </Button>
@@ -95,8 +98,8 @@
                         ToolTip="Save File (Ctrl+S)">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="💾"
-                                FontSize="16"
-                                Margin="0,0,5,0"/>
+                                   FontSize="16"
+                                   Margin="0,0,5,0"/>
                         <TextBlock Text="Save"/>
                     </StackPanel>
                 </Button>
@@ -105,9 +108,20 @@
                         ToolTip="Save As...">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="💾"
-                                FontSize="16"
-                                Margin="0,0,5,0"/>
+                                   FontSize="16"
+                                   Margin="0,0,5,0"/>
                         <TextBlock Text="Save As"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding CloseDocumentCommand}"
+                        CommandParameter="{Binding SelectedDocument}"
+                        ToolTip="Close File">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="✕"
+                                   FontSize="16"
+                                   Margin="0,0,5,0"/>
+                        <TextBlock Text="Close"/>
                     </StackPanel>
                 </Button>
 
@@ -117,8 +131,8 @@
                         ToolTip="Find (Ctrl+F)">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="🔍"
-                                FontSize="16"
-                                Margin="0,0,5,0"/>
+                                   FontSize="16"
+                                   Margin="0,0,5,0"/>
                         <TextBlock Text="Find"/>
                     </StackPanel>
                 </Button>
@@ -127,8 +141,8 @@
                         ToolTip="Replace (Ctrl+H)">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="🔄"
-                                FontSize="16"
-                                Margin="0,0,5,0"/>
+                                   FontSize="16"
+                                   Margin="0,0,5,0"/>
                         <TextBlock Text="Replace"/>
                     </StackPanel>
                 </Button>
@@ -139,7 +153,7 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="250"
-                        MinWidth="150"/>
+                                  MinWidth="150"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
@@ -151,19 +165,37 @@
                     Visibility="{Binding IsFolderExplorerVisible, Converter={StaticResource BoolToVisibilityConverter}}">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top"
-                            Text="Folder Explorer"
+                               Text="Folder Explorer"
                                FontWeight="Bold"
-                            Padding="5"
-                            Background="LightGray"/>
+                               Padding="5"
+                               Background="LightGray"/>
                     <TreeView x:Name="FolderTreeView"
                               ItemsSource="{Binding FolderTreeRoots}"
+                              SelectedItemChanged="FolderTreeView_SelectedItemChanged"
+                              PreviewMouseRightButtonDown="FolderTreeView_PreviewMouseRightButtonDown"
                               MouseDoubleClick="FolderTreeView_MouseDoubleClick">
+                        <TreeView.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="New file"
+                                          Command="{Binding PlacementTarget.DataContext.NewFileInFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                <MenuItem Header="Copy path"
+                                          Command="{Binding PlacementTarget.DataContext.CopyPathCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                <MenuItem Header="Copy folder"
+                                          Command="{Binding PlacementTarget.DataContext.CopyFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                <MenuItem Header="Paste folder"
+                                          Command="{Binding PlacementTarget.DataContext.PasteFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                            </ContextMenu>
+                        </TreeView.ContextMenu>
                         <TreeView.ItemTemplate>
                             <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}"
                                                Margin="0,0,5,0"
-                                            FontSize="14"/>
+                                               FontSize="14"/>
                                     <TextBlock Text="{Binding Name}"/>
                                 </StackPanel>
                                 <HierarchicalDataTemplate.ItemContainerStyle>
@@ -190,9 +222,9 @@
 
             <!-- Grid Splitter -->
             <GridSplitter Grid.Column="1"
-                    Width="3"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Stretch"
+                          Width="3"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
                           Visibility="{Binding IsFolderExplorerVisible, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
             <!-- Tab Control for Documents -->
@@ -216,7 +248,7 @@
                                     Command="{Binding DataContext.CloseDocumentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}"/>
                             <TextBlock Text="{Binding DisplayTitle}"
-                                    VerticalAlignment="Center"/>
+                                       VerticalAlignment="Center"/>
                         </DockPanel>
                     </DataTemplate>
                 </TabControl.ItemTemplate>
