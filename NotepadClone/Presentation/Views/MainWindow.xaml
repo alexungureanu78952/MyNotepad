@@ -1,0 +1,19 @@
+﻿<Window x:Class="NotepadClone.Presentation.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NotepadClone.Presentation.Views"
+        xmlns:vm="clr-namespace:NotepadClone.Presentation.ViewModels"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+        mc:Ignorable="d"
+        Title="Notepad Clone"
+        Height="600"
+        Width="1000">
+    <Grid>
+        <TextBlock Text="MainWindow Ready - Milestone 0 Complete!"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   FontSize="18"/>
+    </Grid>
+</Window>
