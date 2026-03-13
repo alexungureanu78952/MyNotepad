@@ -160,15 +160,21 @@
 
             <!-- Folder Explorer Panel -->
             <Border Grid.Column="0"
-                    BorderBrush="LightGray"
+                    BorderBrush="{StaticResource T.Border}"
                     BorderThickness="0,0,1,0"
+                    Background="{StaticResource T.PanelBg}"
                     Visibility="{Binding IsFolderExplorerVisible, Converter={StaticResource BoolToVisibilityConverter}}">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top"
-                               Text="Folder Explorer"
-                               FontWeight="Bold"
-                               Padding="5"
-                               Background="LightGray"/>
+                    <Border DockPanel.Dock="Top"
+                            Background="{StaticResource T.ToolbarBg}"
+                            BorderBrush="{StaticResource T.Border}"
+                            BorderThickness="0,0,0,1"
+                            Padding="8,5">
+                        <TextBlock Text="FOLDER EXPLORER"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource T.FgDisabled}"
+                                   FontSize="11"/>
+                    </Border>
                     <TreeView x:Name="FolderTreeView"
                               ItemsSource="{Binding FolderTreeRoots}"
                               SelectedItemChanged="FolderTreeView_SelectedItemChanged"
@@ -260,8 +266,8 @@
                                  VerticalScrollBarVisibility="Auto"
                                  HorizontalScrollBarVisibility="Auto"
                                  FontFamily="Consolas"
-                                 FontSize="12"
-                                 Padding="5"/>
+                                 FontSize="14"
+                                 Padding="12,8"/>
                     </DataTemplate>
                 </TabControl.ContentTemplate>
             </TabControl>

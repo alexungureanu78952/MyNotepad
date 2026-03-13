@@ -5,7 +5,9 @@
         Height="220"
         Width="420"
         ResizeMode="NoResize"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        Background="#252526"
+        Foreground="#D4D4D4">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -45,13 +47,14 @@
                        FontWeight="SemiBold"/>
             <TextBlock>
                 <Hyperlink x:Name="EmailHyperlink"
-                           RequestNavigate="EmailHyperlink_RequestNavigate"/>
+                        Foreground="#4EC9B0"
+                        RequestNavigate="EmailHyperlink_RequestNavigate"/>
             </TextBlock>
         </StackPanel>
 
         <TextBlock Grid.Row="4"
                    Text="Tema 1 pentru Medii Avansate de Programare"
-                   Foreground="Gray"
+                   Foreground="#656565"
                    VerticalAlignment="Bottom"/>
 
         <Button Grid.Row="5"
