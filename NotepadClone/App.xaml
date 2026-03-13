@@ -9,6 +9,7 @@
                 <ResourceDictionary Source="/Presentation/Themes/DarkTheme.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:BoolToGridLengthConverter x:Key="BoolToGridLengthConverter"/>
             <converters:FolderFileIconConverter x:Key="FolderFileIconConverter"/>
         </ResourceDictionary>
     </Application.Resources>

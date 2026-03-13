@@ -152,9 +152,8 @@
         <!-- Main Content Area -->
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="250"
-                                  MinWidth="150"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="{Binding IsFolderExplorerVisible, Converter={StaticResource BoolToGridLengthConverter}, ConverterParameter=250}"/>
+                <ColumnDefinition Width="{Binding IsFolderExplorerVisible, Converter={StaticResource BoolToGridLengthConverter}, ConverterParameter=3}"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 

@@ -11,6 +11,8 @@ namespace NotepadClone.Presentation.ViewModels;
 public partial class TreeNodeViewModel : ObservableObject
 {
     private readonly IFolderService _folderService;
+    private readonly ISet<string> _expandedPaths;
+    private readonly Action _onExpansionChanged;
     private readonly string _fullPath;
     private readonly bool _isDirectory;
     private bool _isExpanded;
@@ -33,16 +35,41 @@ public partial class TreeNodeViewModel : ObservableObject
         get => _isExpanded;
         set
         {
-            if (SetProperty(ref _isExpanded, value) && value && !_childrenLoaded)
+            if (SetProperty(ref _isExpanded, value))
             {
-                LoadChildren();
+                if (value)
+                {
+                    if (!_childrenLoaded)
+                    {
+                        LoadChildren();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(_fullPath))
+                    {
+                        _expandedPaths.Add(_fullPath);
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(_fullPath))
+                {
+                    _expandedPaths.Remove(_fullPath);
+                }
+
+                _onExpansionChanged();
             }
         }
     }
 
-    public TreeNodeViewModel(string path, bool isDirectory, IFolderService folderService, bool addPlaceholder = true)
+    public TreeNodeViewModel(
+        string path,
+        bool isDirectory,
+        IFolderService folderService,
+        ISet<string> expandedPaths,
+        Action onExpansionChanged,
+        bool addPlaceholder = true)
     {
         _folderService = folderService;
+        _expandedPaths = expandedPaths;
+        _onExpansionChanged = onExpansionChanged;
         _fullPath = path;
         _isDirectory = isDirectory;
         var directoryName = isDirectory && !string.IsNullOrWhiteSpace(path)
@@ -55,7 +82,12 @@ public partial class TreeNodeViewModel : ObservableObject
         // Add dummy child for directories to show expand arrow
         if (_isDirectory && addPlaceholder)
         {
-            Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, false) { Name = "Loading..." });
+            Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, _expandedPaths, _onExpansionChanged, false) { Name = "Loading..." });
+        }
+
+        if (_isDirectory && !string.IsNullOrWhiteSpace(_fullPath) && _expandedPaths.Contains(_fullPath))
+        {
+            IsExpanded = true;
         }
     }
 
@@ -74,7 +106,7 @@ public partial class TreeNodeViewModel : ObservableObject
             {
                 try
                 {
-                    Children.Add(new TreeNodeViewModel(dir, true, _folderService));
+                    Children.Add(new TreeNodeViewModel(dir, true, _folderService, _expandedPaths, _onExpansionChanged));
                 }
                 catch
                 {
@@ -88,7 +120,7 @@ public partial class TreeNodeViewModel : ObservableObject
             {
                 try
                 {
-                    Children.Add(new TreeNodeViewModel(file, false, _folderService, false));
+                    Children.Add(new TreeNodeViewModel(file, false, _folderService, _expandedPaths, _onExpansionChanged, false));
                 }
                 catch
                 {
@@ -99,16 +131,16 @@ public partial class TreeNodeViewModel : ObservableObject
             // If no children, indicate empty folder
             if (Children.Count == 0)
             {
-                Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, false) { Name = "(Empty)" });
+                Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, _expandedPaths, _onExpansionChanged, false) { Name = "(Empty)" });
             }
         }
         catch (UnauthorizedAccessException)
         {
-            Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, false) { Name = "(Access Denied)" });
+            Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, _expandedPaths, _onExpansionChanged, false) { Name = "(Access Denied)" });
         }
         catch (Exception ex)
         {
-            Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, false) { Name = $"(Error: {ex.Message})" });
+            Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, _expandedPaths, _onExpansionChanged, false) { Name = $"(Error: {ex.Message})" });
         }
     }
 
@@ -124,7 +156,7 @@ public partial class TreeNodeViewModel : ObservableObject
             else
             {
                 Children.Clear();
-                Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, false) { Name = "Loading..." });
+                Children.Add(new TreeNodeViewModel(string.Empty, false, _folderService, _expandedPaths, _onExpansionChanged, false) { Name = "Loading..." });
             }
         }
     }

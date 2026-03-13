@@ -18,7 +18,9 @@ public partial class MainViewModel : ObservableObject
     private readonly IDialogService _dialogService;
     private readonly IFolderService _folderService;
     private readonly IClipboardService _clipboardService;
+    private readonly IUiStateService _uiStateService;
     private string? _copiedFolderPath;
+    private readonly HashSet<string> _expandedFolderPaths = new(StringComparer.OrdinalIgnoreCase);
 
     private int _fileCounter = 1;
 
@@ -60,6 +62,16 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsSearchScopeAllTabs));
     }
 
+    partial void OnIsFolderExplorerVisibleChanged(bool value)
+    {
+        SaveUiState();
+    }
+
+    partial void OnIsStandardViewChanged(bool value)
+    {
+        SaveUiState();
+    }
+
     partial void OnSelectedTreeNodeChanged(TreeNodeViewModel? value)
     {
         NewFileInFolderCommand.NotifyCanExecuteChanged();
@@ -73,13 +85,17 @@ public partial class MainViewModel : ObservableObject
         ITextSearchService textSearchService,
         IDialogService dialogService,
         IFolderService folderService,
-        IClipboardService clipboardService)
+        IClipboardService clipboardService,
+        IUiStateService uiStateService)
     {
         _fileService = fileService;
         _textSearchService = textSearchService;
         _dialogService = dialogService;
         _folderService = folderService;
         _clipboardService = clipboardService;
+        _uiStateService = uiStateService;
+
+        RestoreUiState();
 
         // Initialize folder tree with drives
         InitializeFolderTree();
@@ -92,12 +108,13 @@ public partial class MainViewModel : ObservableObject
     {
         try
         {
+            FolderTreeRoots.Clear();
             var drives = _folderService.GetLogicalDrives();
             foreach (var drive in drives)
             {
                 try
                 {
-                    FolderTreeRoots.Add(new TreeNodeViewModel(drive, true, _folderService));
+                    FolderTreeRoots.Add(new TreeNodeViewModel(drive, true, _folderService, _expandedFolderPaths, SaveUiState));
                 }
                 catch
                 {
@@ -437,6 +454,7 @@ public partial class MainViewModel : ObservableObject
             _folderService.CreateFile(newFilePath);
             node.Refresh();
             node.IsExpanded = true;
+            SaveUiState();
         }
         catch (Exception ex)
         {
@@ -504,6 +522,7 @@ public partial class MainViewModel : ObservableObject
             _folderService.CopyFolder(sourcePath, destinationPath);
             targetNode.Refresh();
             targetNode.IsExpanded = true;
+            SaveUiState();
         }
         catch (Exception ex)
         {
@@ -601,6 +620,29 @@ public partial class MainViewModel : ObservableObject
     private bool CanExecuteFileCommand()
     {
         return SelectedDocument != null;
+    }
+
+    private void RestoreUiState()
+    {
+        var uiState = _uiStateService.Load();
+
+        IsFolderExplorerVisible = uiState.IsFolderExplorerVisible;
+        IsStandardView = !uiState.IsFolderExplorerVisible;
+
+        _expandedFolderPaths.Clear();
+        foreach (var path in uiState.ExpandedFolderPaths.Where(path => !string.IsNullOrWhiteSpace(path)))
+        {
+            _expandedFolderPaths.Add(path);
+        }
+    }
+
+    private void SaveUiState()
+    {
+        _uiStateService.Save(new UiState
+        {
+            IsFolderExplorerVisible = IsFolderExplorerVisible,
+            ExpandedFolderPaths = _expandedFolderPaths.OrderBy(path => path).ToList()
+        });
     }
 
     private IEnumerable<EditorDocument> GetSearchTargets()

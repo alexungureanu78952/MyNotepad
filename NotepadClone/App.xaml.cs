@@ -34,6 +34,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IFolderService, FolderService>();
         services.AddSingleton<IClipboardService, ClipboardService>();
         services.AddSingleton<ITextSearchService, TextSearchService>();
+        services.AddSingleton<IUiStateService, UiStateService>();
 
         // Register ViewModels
         services.AddSingleton<MainViewModel>();
