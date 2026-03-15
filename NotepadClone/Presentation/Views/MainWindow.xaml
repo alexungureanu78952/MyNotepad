@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NotepadClone.Presentation.Views"
+        xmlns:behaviors="clr-namespace:NotepadClone.Presentation.Converters"
         xmlns:vm="clr-namespace:NotepadClone.Presentation.ViewModels"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         mc:Ignorable="d"
@@ -266,7 +267,10 @@
                                  HorizontalScrollBarVisibility="Auto"
                                  FontFamily="Consolas"
                                  FontSize="14"
-                                 Padding="12,8"/>
+                                 Padding="12,8"
+                                 behaviors:TextBoxSelectionBehavior.SelectionStart="{Binding FindSelectionStart}"
+                                 behaviors:TextBoxSelectionBehavior.SelectionLength="{Binding FindSelectionLength}"
+                                 behaviors:TextBoxSelectionBehavior.SelectionRequestId="{Binding FindSelectionRequestId}"/>
                     </DataTemplate>
                 </TabControl.ContentTemplate>
             </TabControl>

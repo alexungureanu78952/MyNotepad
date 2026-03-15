@@ -22,6 +22,15 @@ public partial class EditorDocument : ObservableObject
     [ObservableProperty]
     private bool _isReadOnly;
 
+    [ObservableProperty]
+    private int _findSelectionStart = -1;
+
+    [ObservableProperty]
+    private int _findSelectionLength;
+
+    [ObservableProperty]
+    private int _findSelectionRequestId;
+
     public string DisplayTitle => IsDirty ? $"*{Title}" : Title;
 
     partial void OnIsDirtyChanged(bool value)
@@ -32,5 +41,17 @@ public partial class EditorDocument : ObservableObject
     partial void OnTitleChanged(string value)
     {
         OnPropertyChanged(nameof(DisplayTitle));
+    }
+
+    public void RequestFindSelection(int start, int length)
+    {
+        if (start < 0 || length <= 0)
+        {
+            return;
+        }
+
+        FindSelectionStart = start;
+        FindSelectionLength = length;
+        FindSelectionRequestId++;
     }
 }
